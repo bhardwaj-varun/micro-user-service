@@ -1,16 +1,25 @@
 package com.vb.userservice.services.impl;
 
+import com.vb.userservice.entities.Hotel;
+import com.vb.userservice.entities.Rating;
 import com.vb.userservice.entities.User;
 import com.vb.userservice.exceptions.ResourceNotFoundException;
 import com.vb.userservice.repositories.UserRepository;
 import com.vb.userservice.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    @Autowired
+    RestTemplate restTemplate;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -21,7 +30,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUser(String id) {
-        return userRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("User by not found with id: "+ id));
+
+        User user =userRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("User by not found with id: "+ id));
+
+        Rating[] ratingsArray = restTemplate.getForObject("http://RATING-SERVICE/ratings/users/"+user.getId(), Rating[].class);
+
+        List<Rating> ratingList = Arrays.stream(ratingsArray).toList();
+
+         List<Rating> ratings = ratingList.stream().map(rating->{
+                    //call api
+            Hotel hotel = restTemplate.getForObject("http://HOTEL-SERVICE/hotels/"+rating.getHotelId(), Hotel.class);
+            rating.setHotel(hotel);
+            return rating;
+        }).collect(Collectors.toList());
+        user.setRatings(ratings);
+        return user;
     }
 
     @Override
