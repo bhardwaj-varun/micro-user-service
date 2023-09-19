@@ -5,6 +5,7 @@ import com.vb.userservice.entities.Hotel;
 import com.vb.userservice.entities.Rating;
 import com.vb.userservice.entities.User;
 import com.vb.userservice.exceptions.ResourceNotFoundException;
+import com.vb.userservice.external.services.HotelService;
 import com.vb.userservice.repositories.UserRepository;
 import com.vb.userservice.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private HotelService hotelService;
+
     @Override
     public List<User> getUsers() {
         return userRepository.findAll();
@@ -40,7 +44,7 @@ public class UserServiceImpl implements UserService {
 
          List<Rating> ratings = ratingList.stream().map(rating->{
                     //call api
-            Hotel hotel = restTemplate.getForObject(Constants.GET_HOTEL_BY_RATING_ID_URL+rating.getHotelId(), Hotel.class);
+            Hotel hotel = hotelService.getHotel(rating.getHotelId());
             rating.setHotel(hotel);
             return rating;
         }).collect(Collectors.toList());
