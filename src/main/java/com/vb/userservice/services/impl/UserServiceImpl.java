@@ -1,5 +1,6 @@
 package com.vb.userservice.services.impl;
 
+import com.vb.userservice.Constants;
 import com.vb.userservice.entities.Hotel;
 import com.vb.userservice.entities.Rating;
 import com.vb.userservice.entities.User;
@@ -33,13 +34,13 @@ public class UserServiceImpl implements UserService {
 
         User user =userRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("User by not found with id: "+ id));
 
-        Rating[] ratingsArray = restTemplate.getForObject("http://RATING-SERVICE/ratings/users/"+user.getId(), Rating[].class);
+        Rating[] ratingsArray = restTemplate.getForObject(Constants.GET_RATING_BY_USER_ID_URL+user.getId(), Rating[].class);
 
         List<Rating> ratingList = Arrays.stream(ratingsArray).toList();
 
          List<Rating> ratings = ratingList.stream().map(rating->{
                     //call api
-            Hotel hotel = restTemplate.getForObject("http://HOTEL-SERVICE/hotels/"+rating.getHotelId(), Hotel.class);
+            Hotel hotel = restTemplate.getForObject(Constants.GET_HOTEL_BY_RATING_ID_URL+rating.getHotelId(), Hotel.class);
             rating.setHotel(hotel);
             return rating;
         }).collect(Collectors.toList());
